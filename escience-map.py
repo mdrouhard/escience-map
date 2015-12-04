@@ -10,7 +10,15 @@ import os, os.path
 import argparse
 import itertools
 import networkx as nx
+import json
+from networkx.readwrite import json_graph
 
+class Node:
+	def __init__(self, index, name, group, size):
+		self.index = index 			# index in graph
+		self.name = name 				# label name
+		self.group = group 			# group number
+		self.size = size				# size of group labeled
 
 def build_set(fileName):
 	newSet = set()
@@ -31,19 +39,33 @@ parser.add_argument('-i',
                         required=True,
                         help='input path name')
 
+parser.add_argument('-o',
+                        '--output-path',
+                        dest='outputpath',
+                        required=False,
+                        help='output path name')
+
+
 args = parser.parse_args()
 
-# setup the path argument if provided
+# setup the path arguments if provided
 if args.inputpath:
     path = args.inputpath
 else:
     sys.exit('Error: missing input path.')
 
+if args.outputpath:
+    outfile = args.outputpath
+else:
+    outfile = os.path.join(path,'output.json')
 
-G = nx.Graph()			# Graph data structure
-group = 0						# group number (category of labels; e.g., department)
-groupDict = dict()	# label -> group number
-labelDict = dict()	# label -> label set
+
+G = nx.Graph()				# Graph data structure
+group = 0							# group number (category of labels; e.g., department)
+index = 0							# node index for graph
+nodeDict = dict()			# label -> Node
+nodeSetDict = dict()	# label -> Node(label) set
+
 
 # traverse subdirectories of inputpath
 # stupid os.walk doesn't work the way I need it to
@@ -51,42 +73,22 @@ subdirs = os.listdir(path)
 for subdir in subdirs:
 	subdirpath = os.path.join(path,subdir)
 	if os.path.isdir(subdirpath):
-		group+=1
-		print subdir
+		group += 1
 		files = os.listdir(subdirpath)
 		for f in files:
 			labelName = f[:-4]
-			print "\t" + labelName
 			fpath = os.path.join(subdirpath,f)
+			
+			# save set associated with label
+			labelSet = build_set(fpath)
+			nodeSetDict['labelName'] = labelSet
+			# create & add node to graph and dictionary
+			nodeSize = len(labelSet)
+			node = Node(index, labelName, group, nodeSize)
+			G.add_node(index, name=node.name, group=node.group, size=node.size)
+			nodeDict['labelName'] = node
+			index += 1
 
-
-
-
-# for root, subdirs, files in os.walk(path):
-# 	for subdir in subdirs:
-# 		group+=1
-# 		print subdir
-# 		files = files in subdir only
-# 		for f in files:
-# 			print f
-
-# 	for f in files:
-# 		print f
-
-# subdirs = [x[0] for x in os.walk(path)]                                                                            
-# for subdir in subdirs:                                                                                            
-#     files = os.walk(subdir).next()[2] 
-#     for f in files:
-# 			print subdir + "\t" + f
-
-
-# # Save dictionary of organizational designations
-# orgDesignations = dict()
-# orgDesignations["Leadership"] = build_set("data/leadership.txt")  			
-# orgDesignations["Staff"] = build_set("data/staff.txt")						
-# orgDesignations["DSFellows"] = build_set("data/fellows.txt")				
-# orgDesignations["PostdocFellows"] = build_set("data/postdocs.txt")			
-# orgDesignations["Affiliates"] = build_set("data/affiliates.txt")		
 
 
 # print "eScience Organization Designations:"
@@ -111,3 +113,8 @@ for subdir in subdirs:
 
 # print "total (non-empty) sets: " + str(index)  
 
+
+# dump graph data to json
+data = json_graph.node_link_data(G)
+s = json.dumps(data)
+print s
