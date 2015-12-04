@@ -6,6 +6,7 @@
 
 #!/usr/bin/env python
 import sys
+import os, os.path
 import argparse
 import itertools
 import networkx as nx
@@ -39,7 +40,45 @@ else:
     sys.exit('Error: missing input path.')
 
 
-G = nx.Graph()
+G = nx.Graph()			# Graph data structure
+group = 0						# group number (category of labels; e.g., department)
+groupDict = dict()	# label -> group number
+labelDict = dict()	# label -> label set
+
+# traverse subdirectories of inputpath
+# stupid os.walk doesn't work the way I need it to
+subdirs = os.listdir(path)
+for subdir in subdirs:
+	subdirpath = os.path.join(path,subdir)
+	if os.path.isdir(subdirpath):
+		group+=1
+		print subdir
+		files = os.listdir(subdirpath)
+		for f in files:
+			labelName = f[:-4]
+			print "\t" + labelName
+			fpath = os.path.join(subdirpath,f)
+
+
+
+
+# for root, subdirs, files in os.walk(path):
+# 	for subdir in subdirs:
+# 		group+=1
+# 		print subdir
+# 		files = files in subdir only
+# 		for f in files:
+# 			print f
+
+# 	for f in files:
+# 		print f
+
+# subdirs = [x[0] for x in os.walk(path)]                                                                            
+# for subdir in subdirs:                                                                                            
+#     files = os.walk(subdir).next()[2] 
+#     for f in files:
+# 			print subdir + "\t" + f
+
 
 # # Save dictionary of organizational designations
 # orgDesignations = dict()
