@@ -81,40 +81,40 @@ for subdir in subdirs:
 			
 			# save set associated with label
 			labelSet = build_set(fpath)
-			nodeSetDict['labelName'] = labelSet
+			nodeSetDict[labelName] = labelSet
 			# create & add node to graph and dictionary
 			nodeSize = len(labelSet)
 			node = Node(index, labelName, group, nodeSize)
 			G.add_node(index, name=node.name, group=node.group, size=node.size)
-			nodeDict['labelName'] = node
+			nodeDict[labelName] = index
 			index += 1
 
-
-
-# print "eScience Organization Designations:"
-# for key in orgDesignations:
-# 	print key + ": " + str(len(orgDesignations[key]))
-
-# print ""
-
-
-# # Calculate and print non-empty intersections of sets
-# index = 0
-# for L in range(1, len(orgDesignations)+1):
-#   for subset in itertools.combinations(orgDesignations, L):
-# 	intersection = orgDesignations[subset[0]]
+#TODO: bring this back if we do venn diagrams again
+# # Determine non-empty intersections of sets and create graph links
+# for L in range(1, len(nodeSetDict)+1):
+#   for subset in itertools.combinations(nodeSetDict, L):
+# 	intersection = nodeSetDict[subset[0]]
 # 	for s in subset:
-# 		intersection = intersection & orgDesignations[s]
+# 		intersection = intersection & nodeSetDict[s]
 # 	if len(intersection) > 0:
-# 		print subset 
 # 		print len(intersection)
-# 		print ""
-# 		index += 1
 
-# print "total (non-empty) sets: " + str(index)  
+# Determine pairwise intersections and create graph links
+for keyA in nodeSetDict:
+	for keyB in nodeSetDict:
+		if keyA != keyB:
+			intersection = nodeSetDict[keyA] & nodeSetDict[keyB]
+			overlapAmt = len(intersection)
+			if overlapAmt > 0:
+				# print keyA + " & " + keyB + ": " + str(overlapAmt)
+				indexA = nodeDict[keyA]
+				indexB = nodeDict[keyB]
+				# print str(indexA) + " & " + str(indexB) + ": " + str(overlapAmt)
+				G.add_edge(indexA, indexB, value=overlapAmt)
 
 
 # dump graph data to json
 data = json_graph.node_link_data(G)
 s = json.dumps(data)
-print s
+with open(outfile, "w") as f:
+	f.write(s)
