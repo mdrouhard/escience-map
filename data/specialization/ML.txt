@@ -1,0 +1,17 @@
+Aravkin
+Bilmes
+Brunton-B
+Brunton-S
+Ford
+Guestrin
+Hoff
+Kakade
+Lieblich
+Fazel
+Meila
+Smith-N
+Tolle
+Vanderplas
+Witten
+Yeung
+Zhang

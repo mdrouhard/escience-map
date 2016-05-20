@@ -45,6 +45,12 @@ parser.add_argument('-o',
                         required=False,
                         help='output path name')
 
+parser.add_argument('-p',
+                        '--personal',
+                        dest='personalmap',
+                        required=False,
+                        help='person id for individual map generation')
+
 
 args = parser.parse_args()
 
@@ -58,6 +64,12 @@ if args.outputpath:
     outfile = args.outputpath
 else:
     outfile = os.path.join(path,'output.json')
+
+# if non-empty (white space treated as empty) personal id provided
+if args.personalmap and not args.personalmap.isspace():
+    personID = args.personalmap
+else:
+    personID = None
 
 
 G = nx.Graph()				# Graph data structure
@@ -76,18 +88,25 @@ for subdir in subdirs:
 		group += 1
 		files = os.listdir(subdirpath)
 		for f in files:
-			labelName = f[:-4]
-			fpath = os.path.join(subdirpath,f)
-			
-			# save set associated with label
-			labelSet = build_set(fpath)
-			nodeSetDict[labelName] = labelSet
-			# create & add node to graph and dictionary
-			nodeSize = len(labelSet)
-			node = Node(index, labelName, group, nodeSize)
-			G.add_node(index, name=node.name, group=node.group, size=node.size)
-			nodeDict[labelName] = index
-			index += 1
+			# exclude hidden files
+			if not f.startswith('.'):
+				labelName = f[:-4]
+				fpath = os.path.join(subdirpath,f)
+				
+				# save set & index associated with label
+				labelSet = build_set(fpath)
+				nodeSetDict[labelName] = labelSet
+				nodeDict[labelName] = index
+
+				# full map case
+				# create & add node to graph and dictionary
+				if not personID:
+					nodeSize = len(labelSet)
+					node = Node(index, labelName, group, nodeSize)
+					G.add_node(index, name=node.name, group=node.group, size=node.size)
+				
+
+				index += 1
 
 #TODO: bring this back if we do venn diagrams again
 # # Determine non-empty intersections of sets and create graph links

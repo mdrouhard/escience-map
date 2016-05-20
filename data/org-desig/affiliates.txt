@@ -12,7 +12,6 @@ Deutsch
 Ellis
 Erosheva
 Fairhall
-Fazel
 Flaxman
 Fox
 Fugate
@@ -27,11 +26,12 @@ Ivezic
 Jandhyala
 Kirschen
 Kutz
-LeeA
-LeeC
+Lee
+Lee
 Lieblich
 MacCready
 Marwick
+Fazel
 Matsen
 Meadows
 Meila
@@ -53,7 +53,7 @@ Roberts
 Shea-Brown
 Shojaie
 Siegel
-SmithN
+Smith-N
 Soma
 Starbird
 Stuetzle
@@ -62,6 +62,7 @@ Teredesai
 Thompson
 Tolle
 Vidale
+Way
 West
 Wilkerson
 Wilkes
