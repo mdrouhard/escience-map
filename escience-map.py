@@ -93,18 +93,23 @@ for subdir in subdirs:
 				labelName = f[:-4]
 				fpath = os.path.join(subdirpath,f)
 				
-				# save set & index associated with label
+				# save set & properties associated with label
 				labelSet = build_set(fpath)
 				nodeSetDict[labelName] = labelSet
 				nodeDict[labelName] = index
+				nodeSize = len(labelSet)
 
-				# full map case
 				# create & add node to graph and dictionary
-				if not personID:
-					nodeSize = len(labelSet)
+				# full map case
+				if not personID:		
 					node = Node(index, labelName, group, nodeSize)
 					G.add_node(index, name=node.name, group=node.group, size=node.size)
-				
+				# personal map case
+				elif personID:
+					if (personID in labelSet):
+						print personID + " is in set " + labelName
+						node = Node(index, labelName, group, nodeSize)
+						G.add_node(index, name=node.name, group=node.group, size=node.size)
 
 				index += 1
 
@@ -122,14 +127,16 @@ for subdir in subdirs:
 for keyA in nodeSetDict:
 	for keyB in nodeSetDict:
 		if keyA != keyB:
-			intersection = nodeSetDict[keyA] & nodeSetDict[keyB]
-			overlapAmt = len(intersection)
-			if overlapAmt > 0:
-				# print keyA + " & " + keyB + ": " + str(overlapAmt)
-				indexA = nodeDict[keyA]
-				indexB = nodeDict[keyB]
-				# print str(indexA) + " & " + str(indexB) + ": " + str(overlapAmt)
-				G.add_edge(indexA, indexB, value=overlapAmt)
+			# if full network case or if person falls into boths
+			if (not personID) or (personID in nodeSetDict[keyA]) or (personID in nodeSetDict[keyB]):
+				intersection = nodeSetDict[keyA] & nodeSetDict[keyB]
+				overlapAmt = len(intersection)
+				if overlapAmt > 0:
+					# print keyA + " & " + keyB + ": " + str(overlapAmt)
+					indexA = nodeDict[keyA]
+					indexB = nodeDict[keyB]
+					# print str(indexA) + " & " + str(indexB) + ": " + str(overlapAmt)
+					G.add_edge(indexA, indexB, value=overlapAmt)
 
 
 # dump graph data to json
