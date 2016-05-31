@@ -11,6 +11,7 @@ import argparse
 import itertools
 import networkx as nx
 import json
+import jsonpickle
 from networkx.readwrite import json_graph
 
 class Node:
@@ -20,6 +21,14 @@ class Node:
 		self.group = group 			# group number
 		self.size = size				# size of group labeled
 
+class Person:
+	def __init__(self, stringID, displayString):
+		self.stringID = stringID							# string id
+		self.displayString = displayString 		# string name to display
+		self.nodes = []												# list of nodes associated with person
+		self.links = []												# list of links associated with person
+
+# build set of persons from given file by stripping newlines and adding strings to set
 def build_set(fileName):
 	newSet = set()
 	with open(fileName, "r") as f:
@@ -27,6 +36,24 @@ def build_set(fileName):
 			newSet.add(line.rstrip('\n'))
 
 	return newSet
+
+# update person dict pDict by adding nodeID to array of nodes for each person in 
+def update_person_dict_nodes(pDict, personSet, nodeID):
+	for personKey in personSet:
+		# if person not in dict, create person
+		if not personKey in pDict:
+			pDict[personKey] = Person(personKey, personKey)
+
+		# update person's node list
+		pDict[personKey].nodes.append(nodeID)
+
+
+	return	
+
+
+# TODO updated dict links
+
+# TODO sort node and link lists in dict FINALIZE
 
 ###############################################################################
 
@@ -43,7 +70,13 @@ parser.add_argument('-o',
                         '--output-path',
                         dest='outputpath',
                         required=False,
-                        help='output path name')
+                        help='graph output path name')
+
+parser.add_argument('-m',
+                        '--map-output-path',
+                        dest='mapoutputpath',
+                        required=False,
+                        help='map output path name')
 
 parser.add_argument('-p',
                         '--personal',
@@ -65,19 +98,26 @@ if args.outputpath:
 else:
     outfile = os.path.join(path,'output.json')
 
+if args.mapoutputpath:
+    map_outfile = args.mapoutputpath
+else:
+    map_outfile = os.path.join(path,'map_output.json')
+
 # if non-empty (white space treated as empty) personal id provided
 if args.personalmap and not args.personalmap.isspace():
     personID = args.personalmap
 else:
     personID = None
 
-
+# Set up graph variables
 G = nx.Graph()				# Graph data structure
 group = 0							# group number (category of labels; e.g., department)
 index = 0							# node index for graph
 nodeDict = dict()			# label -> Node
 nodeSetDict = dict()	# label -> Node(label) set
 
+# Set up person map variables
+personDict = dict()		# personID -> {displayID, nodeIDsArray, linkIDsArray}
 
 # traverse subdirectories of inputpath
 # stupid os.walk doesn't work the way I need it to
@@ -99,6 +139,9 @@ for subdir in subdirs:
 				nodeDict[labelName] = index
 				nodeSize = len(labelSet)
 
+				# update personDict with nodeID for this set
+				update_person_dict_nodes(personDict, labelSet, index)
+
 				# create & add node to graph and dictionary
 				# full map case
 				if not personID:		
@@ -107,7 +150,7 @@ for subdir in subdirs:
 				# personal map case
 				elif personID:
 					if (personID in labelSet):
-						print personID + " is in set " + labelName
+						print personID + " is in set " + labelName + " (nodeID=" + str(index) + ")"
 						node = Node(index, labelName, group, nodeSize)
 						G.add_node(index, name=node.name, group=node.group, size=node.size)
 
@@ -144,3 +187,8 @@ data = json_graph.node_link_data(G)
 s = json.dumps(data)
 with open(outfile, "w") as f:
 	f.write(s)
+
+# dump personDict data to json using jsonpickle
+d = jsonpickle.encode(personDict)
+with open(map_outfile, "w") as f:
+	f.write(d)
