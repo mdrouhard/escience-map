@@ -39,11 +39,12 @@ def build_set(fileName):
 	return newSet
 
 # update person dict pDict by adding nodeID to array of nodes for each person in 
-def update_person_dict_nodes(pDict, personSet, nodeID):
+def update_person_dict_nodes(pDict, personSet, nodeID, setLabel):
 	for personKey in personSet:
 		# if person not in dict, create person
 		if not personKey in pDict:
 			pDict[personKey] = Person(personKey, personKey)
+			# print personKey + " is missing; added from set: " + setLabel
 
 		# update person's node list
 		pDict[personKey].nodes.append(nodeID)
@@ -53,7 +54,7 @@ def read_person_keys(pDict, filepath):
 	with open(filepath, "r") as f:
 		reader = csv.DictReader(f)
 		for row in reader:
-			displayS = row["Last_Name"] + ", " + row["First_Name"]
+			displayS = row["Last_Name"] + "," + row["First_Name"]
 			personKey = row["ID"]
 			if not personKey in pDict:
 				pDict[personKey] = Person(personKey, displayS)
@@ -165,7 +166,7 @@ for subdir in subdirs:
 				nodeSize = len(labelSet)
 
 				# update personDict with nodeID for this set
-				update_person_dict_nodes(personDict, labelSet, index)
+				update_person_dict_nodes(personDict, labelSet, index, labelName)
 
 				# create & add node to graph and dictionary
 				# full map case
