@@ -12,6 +12,7 @@ import itertools
 import networkx as nx
 import json
 import jsonpickle
+import csv
 from networkx.readwrite import json_graph
 
 class Node:
@@ -26,7 +27,7 @@ class Person:
 		self.stringID = stringID							# string id
 		self.displayString = displayString 		# string name to display
 		self.nodes = []												# list of nodes associated with person
-		self.links = []												# list of links associated with person
+		# self.links = []												# list of links associated with person
 
 # build set of persons from given file by stripping newlines and adding strings to set
 def build_set(fileName):
@@ -46,9 +47,18 @@ def update_person_dict_nodes(pDict, personSet, nodeID):
 
 		# update person's node list
 		pDict[personKey].nodes.append(nodeID)
-
-
 	return	
+
+def read_person_keys(pDict, filepath):
+	with open(filepath, "r") as f:
+		reader = csv.DictReader(f)
+		for row in reader:
+			displayS = row["Last_Name"] + ", " + row["First_Name"]
+			personKey = row["ID"]
+			if not personKey in pDict:
+				pDict[personKey] = Person(personKey, displayS)
+
+	return
 
 
 # TODO updated dict links
@@ -84,6 +94,12 @@ parser.add_argument('-p',
                         required=False,
                         help='person id for individual map generation')
 
+parser.add_argument('-k',
+                        '--person-keys',
+                        dest='personkeys',
+                        required=False,
+                        help='CSV file with keys and string ids in format --key, Last Name, First Name--')
+
 
 args = parser.parse_args()
 
@@ -109,6 +125,11 @@ if args.personalmap and not args.personalmap.isspace():
 else:
     personID = None
 
+if args.personkeys:
+    key_infile = args.personkeys
+else:
+    key_infile = None
+
 # Set up graph variables
 G = nx.Graph()				# Graph data structure
 group = 0							# group number (category of labels; e.g., department)
@@ -118,6 +139,10 @@ nodeSetDict = dict()	# label -> Node(label) set
 
 # Set up person map variables
 personDict = dict()		# personID -> {displayID, nodeIDsArray, linkIDsArray}
+
+# if person key file is provided, map them to display strings
+if key_infile:
+	read_person_keys(personDict, key_infile)
 
 # traverse subdirectories of inputpath
 # stupid os.walk doesn't work the way I need it to
@@ -170,7 +195,7 @@ for subdir in subdirs:
 for keyA in nodeSetDict:
 	for keyB in nodeSetDict:
 		if keyA != keyB:
-			# if full network case or if person falls into boths
+			# if full network case or if person falls into both
 			if (not personID) or (personID in nodeSetDict[keyA]) or (personID in nodeSetDict[keyB]):
 				intersection = nodeSetDict[keyA] & nodeSetDict[keyB]
 				overlapAmt = len(intersection)
